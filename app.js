@@ -1,7 +1,7 @@
 const APP_CONFIG = {
   driverName: "笨笨",
   passengerName: "黄佳怡小朋友",
-  phoneNumber: "13800000000",
+  phoneNumber: "13268782431",
   passengerPhone: "",
   carModel: "黄佳怡的专属小车",
   plateNumber: "粤A EK3226",
@@ -80,7 +80,7 @@ const updateConnectionCopy = () => {
     return;
   }
 
-  driverConnectionStatus.textContent = syncMode === "online" ? "甜甜雷达在线" : "本机演示模式";
+  driverConnectionStatus.textContent = syncMode === "online" ? "甜甜雷达在线" : "请注意宝宝的来电和订单";
 };
 
 const formatOrderTime = (isoTime) => {
