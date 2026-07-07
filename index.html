@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ff7a59" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="笨笨专车" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="description" content="专属司机笨笨的温柔接驾小程序。" />
+    <title>笨笨专属接驾</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" aria-live="polite">
+      <section class="map-stage" aria-label="接驾路线">
+        <div class="route-grid"></div>
+        <div class="route-line"></div>
+        <div class="pin pin-start" aria-hidden="true"><span></span></div>
+        <div class="pin pin-car" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img" aria-label="专属车辆">
+            <path d="M13 31l5-12c1-3 4-5 7-5h14c3 0 6 2 7 5l5 12 4 3v14h-6a7 7 0 0 1-14 0H29a7 7 0 0 1-14 0H9V34l4-3z" />
+            <path d="M20 30l3-8h18l3 8H20z" class="car-window" />
+            <circle cx="22" cy="48" r="4" />
+            <circle cx="42" cy="48" r="4" />
+          </svg>
+        </div>
+        <div class="pin pin-dest" aria-hidden="true"><span></span></div>
+      </section>
+
+      <section class="ride-panel" aria-label="笨笨专属接驾">
+        <div class="handle" aria-hidden="true"></div>
+
+        <div class="shell-view is-active" data-shell="login">
+          <p class="eyebrow">BENBEN EXPRESS</p>
+          <h1>笨笨专属接驾</h1>
+          <p class="subtitle">输入暗号，进入只属于你们的小车频道。</p>
+
+          <form class="login-form" id="loginForm">
+            <label class="field-label" for="usernameInput">账号</label>
+            <input class="text-input" id="usernameInput" name="username" autocomplete="username" inputmode="text" />
+
+            <label class="field-label" for="passwordInput">密码</label>
+            <input class="text-input" id="passwordInput" name="password" type="password" autocomplete="current-password" />
+
+            <button class="primary-action" type="submit">
+              <span class="action-icon" aria-hidden="true">♪</span>
+              <span>进入专属频道</span>
+            </button>
+            <p class="form-message" id="loginMessage" role="alert"></p>
+          </form>
+        </div>
+
+        <div class="shell-view passenger-shell" data-shell="passenger">
+          <div class="top-actions">
+            <span class="tiny-status">黄佳怡小朋友专属</span>
+            <button class="tertiary-action" id="passengerLogoutButton" type="button">退出</button>
+          </div>
+
+          <div class="idle-view app-view is-active" data-view="idle">
+            <p class="eyebrow">BUNBUN ONLY</p>
+            <h1>笨笨专属接驾</h1>
+            <p class="subtitle">随时待命，只接黄佳怡小朋友一位乘客。</p>
+            <button class="primary-action" id="hailButton" type="button">
+              <span class="action-icon" aria-hidden="true">♪</span>
+              <span>呼叫专属司机</span>
+            </button>
+          </div>
+
+          <div class="matching-view app-view" data-view="matching">
+            <div class="pulse-wrap" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <p class="matching-title">正在为你匹配笨笨专车</p>
+            <p class="matching-copy">专属频道已接通，请稍等一下下。</p>
+          </div>
+
+          <div class="accepted-view app-view" data-view="accepted">
+            <div class="status-row">
+              <div>
+                <p class="eyebrow">ORDER ACCEPTED</p>
+                <h2>已接单</h2>
+              </div>
+              <span class="status-pill">正在赶来</span>
+            </div>
+
+            <p class="accepted-copy">你的专属司机 <strong id="driverNameText">笨笨</strong> 正在赶来。</p>
+
+            <div class="driver-card">
+              <img class="driver-avatar" src="assets/driver-avatar.svg" alt="笨笨司机头像" />
+              <div class="driver-meta">
+                <p class="driver-name" id="driverCardName">笨笨</p>
+                <p class="driver-details" id="carInfo">黄佳怡的专属小车 · 粤A EK3226</p>
+              </div>
+              <div class="eta-box">
+                <span id="etaText">3</span>
+                <small>分钟</small>
+              </div>
+            </div>
+
+            <div class="route-summary">
+              <div>
+                <span class="dot dot-now"></span>
+                <p id="pickupText">你的心里</p>
+              </div>
+              <div>
+                <span class="dot dot-home"></span>
+                <p>笨笨正在来找你</p>
+              </div>
+            </div>
+
+            <p class="sync-status" id="passengerSyncStatus">拨通电话时，会把甜甜来单送到笨笨车主端。</p>
+
+            <a class="call-action" id="callButton" href="tel:13800000000">
+              <span class="phone-mark" aria-hidden="true">☎</span>
+              <span>马上打给笨笨</span>
+            </a>
+
+            <button class="secondary-action" id="againButton" type="button">重新叫车</button>
+          </div>
+        </div>
+
+        <div class="shell-view driver-shell" data-shell="driver">
+          <div class="top-actions">
+            <span class="tiny-status" id="driverConnectionStatus">甜甜雷达待命中</span>
+            <button class="tertiary-action" id="driverLogoutButton" type="button">退出</button>
+          </div>
+
+          <div class="status-row">
+            <div>
+              <p class="eyebrow">OWNER DESK</p>
+              <h2>笨笨车主端</h2>
+            </div>
+            <span class="status-pill">值班中</span>
+          </div>
+
+          <p class="accepted-copy">今天也要做一个反应很快、方向感很好、只接宝宝的笨笨。</p>
+
+          <div class="empty-order" id="emptyOrder">
+            <p class="empty-title">暂时没有新来单</p>
+            <p>请保持手机有电，宝宝一按电话，这里就会亮起来。</p>
+          </div>
+
+          <div class="driver-order is-hidden" id="driverOrderCard">
+            <p class="eyebrow">NEW SWEET ORDER</p>
+            <h2>你的宝宝 <span id="orderPassengerName">黄佳怡小朋友</span> 叫车啦</h2>
+            <p class="order-copy">请尽快前往目的地：<strong id="orderDestination">你的心里</strong>。</p>
+
+            <div class="order-meta-grid">
+              <div>
+                <span>下单时间</span>
+                <strong id="orderTime">刚刚</strong>
+              </div>
+              <div>
+                <span>车辆</span>
+                <strong id="orderCar">黄佳怡的专属小车</strong>
+              </div>
+              <div>
+                <span>车牌</span>
+                <strong id="orderPlate">粤A EK3226</strong>
+              </div>
+              <div>
+                <span>上车点</span>
+                <strong id="orderPickup">你的心里</strong>
+              </div>
+            </div>
+
+            <p class="sync-status" id="driverOrderStatus">请尽快出发，宝宝正在等你。</p>
+
+            <div class="order-actions">
+              <a class="call-action compact-call" id="driverCallButton" href="tel:13800000000">
+                <span class="phone-mark" aria-hidden="true">☎</span>
+                <span>回拨宝宝</span>
+              </a>
+              <button class="secondary-action" id="markDepartedButton" type="button">我已出发</button>
+            </div>
+            <button class="text-action" id="clearOrderButton" type="button">清空来单</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
