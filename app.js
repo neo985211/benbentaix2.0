@@ -173,7 +173,7 @@ const saveOrder = async (order) => {
     syncMode = "local";
     updateConnectionCopy();
     setLocalOrder(order);
-    passengerSyncStatus.textContent = "已在本机记录来单；部署 Cloudflare Pages 后可跨手机同步。";
+    passengerSyncStatus.textContent = "笨笨已出发，请保持可爱和耐心。";
     return order;
   }
 };
