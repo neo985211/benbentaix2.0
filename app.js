@@ -7,7 +7,7 @@ const APP_CONFIG = {
   plateNumber: "粤A EK3226",
   pickup: "你的心里",
   destination: "你的心里",
-  etaMinutes: 3,
+  etaMinutes: 520,
   autoOpenDialerAfterAccepted: false,
 };
 
