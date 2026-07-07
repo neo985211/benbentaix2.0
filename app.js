@@ -6,7 +6,7 @@ const APP_CONFIG = {
   carModel: "黄佳怡的专属小车",
   plateNumber: "粤A EK3226",
   pickup: "你的心里",
-  destination: "你的心里",
+  destination: "位置：你的心里",
   etaMinutes: 520,
   autoOpenDialerAfterAccepted: false,
 };
