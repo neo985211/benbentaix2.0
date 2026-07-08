@@ -1,4 +1,5 @@
 const ORDER_KEY = "latest-order";
+const DO_OBJECT_NAME = "bunbun-latest-order";
 
 const headers = {
   "Content-Type": "application/json; charset=utf-8",
@@ -11,29 +12,57 @@ const json = (data, status = 200) =>
     headers,
   });
 
-const getStore = (env) => env.BUNBUN_ORDERS;
+const getDurableOrder = async (request, env) => {
+  if (!env.BUNBUN_ORDER_DO) {
+    return null;
+  }
 
-const readOrder = async (store) => {
-  const raw = await store.get(ORDER_KEY);
+  const id = env.BUNBUN_ORDER_DO.idFromName(DO_OBJECT_NAME);
+  const stub = env.BUNBUN_ORDER_DO.get(id);
+  return stub.fetch(request);
+};
+
+const getKvStore = (env) => env.BUNBUN_ORDERS;
+
+const readKvOrder = async (store) => {
+  const raw = await store.get(ORDER_KEY, { cacheTtl: 0 });
   return raw ? JSON.parse(raw) : null;
 };
 
-export async function onRequestGet({ env }) {
-  const store = getStore(env);
-  if (!store) {
-    return json({ order: null, error: "Missing BUNBUN_ORDERS KV binding" }, 503);
+const readJson = async (request) => {
+  try {
+    return await request.json();
+  } catch {
+    return {};
+  }
+};
+
+export async function onRequestGet({ request, env }) {
+  const durableResponse = await getDurableOrder(request, env);
+  if (durableResponse) {
+    return durableResponse;
   }
 
-  return json({ order: await readOrder(store), mode: "cloudflare-kv" });
+  const store = getKvStore(env);
+  if (!store) {
+    return json({ order: null, error: "Missing BUNBUN_ORDER_DO Durable Object binding or BUNBUN_ORDERS KV binding" }, 503);
+  }
+
+  return json({ order: await readKvOrder(store), mode: "cloudflare-kv" });
 }
 
 export async function onRequestPost({ request, env }) {
-  const store = getStore(env);
-  if (!store) {
-    return json({ order: null, error: "Missing BUNBUN_ORDERS KV binding" }, 503);
+  const durableResponse = await getDurableOrder(request, env);
+  if (durableResponse) {
+    return durableResponse;
   }
 
-  const payload = await request.json();
+  const store = getKvStore(env);
+  if (!store) {
+    return json({ order: null, error: "Missing BUNBUN_ORDER_DO Durable Object binding or BUNBUN_ORDERS KV binding" }, 503);
+  }
+
+  const payload = await readJson(request);
   const now = new Date().toISOString();
   const order = {
     ...payload,
@@ -47,13 +76,18 @@ export async function onRequestPost({ request, env }) {
 }
 
 export async function onRequestPatch({ request, env }) {
-  const store = getStore(env);
-  if (!store) {
-    return json({ order: null, error: "Missing BUNBUN_ORDERS KV binding" }, 503);
+  const durableResponse = await getDurableOrder(request, env);
+  if (durableResponse) {
+    return durableResponse;
   }
 
-  const payload = await request.json();
-  const current = await readOrder(store);
+  const store = getKvStore(env);
+  if (!store) {
+    return json({ order: null, error: "Missing BUNBUN_ORDER_DO Durable Object binding or BUNBUN_ORDERS KV binding" }, 503);
+  }
+
+  const payload = await readJson(request);
+  const current = await readKvOrder(store);
   if (!current) {
     return json({ order: null, mode: "cloudflare-kv" });
   }
@@ -68,10 +102,15 @@ export async function onRequestPatch({ request, env }) {
   return json({ order, mode: "cloudflare-kv" });
 }
 
-export async function onRequestDelete({ env }) {
-  const store = getStore(env);
+export async function onRequestDelete({ request, env }) {
+  const durableResponse = await getDurableOrder(request, env);
+  if (durableResponse) {
+    return durableResponse;
+  }
+
+  const store = getKvStore(env);
   if (!store) {
-    return json({ order: null, error: "Missing BUNBUN_ORDERS KV binding" }, 503);
+    return json({ order: null, error: "Missing BUNBUN_ORDER_DO Durable Object binding or BUNBUN_ORDERS KV binding" }, 503);
   }
 
   await store.delete(ORDER_KEY);

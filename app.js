@@ -1,13 +1,13 @@
 const APP_CONFIG = {
   driverName: "笨笨",
   passengerName: "黄佳怡小朋友",
-  phoneNumber: "13268782431",
+  phoneNumber: "13800000000",
   passengerPhone: "",
   carModel: "黄佳怡的专属小车",
   plateNumber: "粤A EK3226",
   pickup: "你的心里",
-  destination: "位置：你的心里",
-  etaMinutes: 520,
+  destination: "你的心里",
+  etaMinutes: 3,
   autoOpenDialerAfterAccepted: false,
 };
 
@@ -80,7 +80,7 @@ const updateConnectionCopy = () => {
     return;
   }
 
-  driverConnectionStatus.textContent = syncMode === "online" ? "甜甜雷达在线" : "请注意宝宝的来电和订单";
+  driverConnectionStatus.textContent = syncMode === "online" ? "甜甜雷达在线" : "本机演示模式";
 };
 
 const formatOrderTime = (isoTime) => {
@@ -173,7 +173,7 @@ const saveOrder = async (order) => {
     syncMode = "local";
     updateConnectionCopy();
     setLocalOrder(order);
-    passengerSyncStatus.textContent = "笨笨已出发，请保持可爱和耐心。";
+    passengerSyncStatus.textContent = "已在本机记录来单；部署 Cloudflare Pages 后可跨手机同步。";
     return order;
   }
 };

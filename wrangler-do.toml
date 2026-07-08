@@ -1,0 +1,12 @@
+name = "bunbun-order-do"
+main = "worker/order-do.js"
+compatibility_date = "2026-07-08"
+
+[durable_objects]
+bindings = [
+  { name = "BUNBUN_ORDER_DO", class_name = "BunbunOrderDurableObject" }
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["BunbunOrderDurableObject"]

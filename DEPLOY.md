@@ -1,66 +1,133 @@
 # 部署到手机可打开的网址
 
-这个项目现在包含两个部分：
+这个项目现在包含：
 
 - 前端页面：登录入口、用户端、车主端。
-- 来单接口：`/api/order`，用于让两台手机同步同一笔订单。
+- Pages Function：`/api/order`。
+- Durable Object Worker：`worker/order-do.js`，用于稳定保存最新来单。
 
-如果只用 GitHub Pages，页面可以打开，但 GitHub Pages 不能运行 `/api/order` 后端，所以车主端不会跨设备收到真实来单，只能本机演示。要实现「女朋友拨打电话后，你的车主端显示来单」，推荐部署到 Cloudflare Pages。
+## 为什么不用 KV
 
-## 方案一：Cloudflare Pages，推荐
+Cloudflare KV 是最终一致存储，不适合「一台手机刚下单，另一台手机马上看到」这种实时场景。Durable Object 会把同一个对象的读写集中到一起，更适合这个最新来单状态。
 
-优点：免费、速度通常不错、可以运行 Pages Functions，还能绑定 KV 保存最新来单。
+## 一、部署 Pages 前端
 
-步骤：
+Cloudflare Pages 项目继续使用你现在的 `benbentaix2-0` 即可。
 
-1. 把整个项目上传到 GitHub 仓库。
-2. 注册并登录 Cloudflare。
-3. 进入 Workers & Pages。
-4. 创建一个 KV namespace，名字可以叫 `bunbun_orders`。
-5. 创建 Pages 项目，选择 Connect to Git，连接这个 GitHub 仓库。
-6. 构建设置保持最简单：
-   - Framework preset: None
-   - Build command: 留空
-   - Build output directory: `/`
-7. 部署完成后，进入这个 Pages 项目的 Settings。
-8. 找到 Functions 的 KV namespace bindings。
-9. 添加绑定：
-   - Variable name: `BUNBUN_ORDERS`
-   - KV namespace: 选择刚才创建的 `bunbun_orders`
-10. 重新部署一次。
-11. 打开 Cloudflare 给你的 `https://xxx.pages.dev` 网址。
+构建配置建议：
 
-部署好以后：
+```text
+Framework preset: Static HTML / None / No framework
+Build command: exit 0
+Build output directory: /
+Root directory: /
+```
 
-- 用户端登录：账号 `hjy`，密码 `440200`
-- 车主端登录：账号 `benben`，密码 `463926`
-- 黄佳怡小朋友在用户端点「马上打给笨笨」后，车主端会在几秒内显示新来单。
+如果 `Build output directory` 不接受 `/`，就填：
 
-## 方案二：GitHub Pages，只适合静态展示
+```text
+.
+```
 
-优点：完全免费、配置少。
+## 二、部署 Durable Object Worker
 
-步骤：
+在本项目根目录运行：
 
-1. 在 GitHub 新建一个仓库，例如 `bunbun-taxi`。
-2. 把本项目所有文件上传到仓库根目录。
-3. 进入仓库 Settings。
-4. 找到 Pages。
-5. Source 选择 Deploy from a branch。
-6. Branch 选择 `main`，目录选择 `/root`。
-7. 保存后等待 1 到 3 分钟。
-8. GitHub 会生成类似 `https://你的用户名.github.io/bunbun-taxi/` 的网址。
+```bash
+npx wrangler login
+npx wrangler deploy --config wrangler-do.toml
+```
 
-注意：GitHub Pages 不能运行本项目的 `functions/api/order.js`，所以不能完成跨手机来单同步。
+部署成功后，Cloudflare 里会出现一个 Worker：
 
-## 添加到 iPhone 主屏幕
+```text
+bunbun-order-do
+```
 
-用 iPhone Safari 打开部署后的 HTTPS 网址，点分享按钮，选择「添加到主屏幕」。以后从主屏幕图标打开时，会像一个轻量 App 一样运行。
+并创建 Durable Object class：
 
-## 注意隐私
+```text
+BunbunOrderDurableObject
+```
 
-这个是情侣小工具，不是真正的安全登录系统。账号密码和手机号都在前端代码里，懂技术的人拿到网址后可以查看源码。不要把网址公开分享。
+## 三、给 Pages 项目绑定 Durable Object
 
-## 改完内容后看不到新版？
+进入 Cloudflare Dashboard：
 
-PWA 会缓存页面。现在的 `sw.js` 已经改成网络优先，并且不会缓存 `/api/order`。如果手机还是显示旧文案，可以在 Safari 里清除该网站数据，或者换一个新部署网址再打开。
+1. 打开 `Workers & Pages`
+2. 进入你的 Pages 项目 `benbentaix2-0`
+3. 进入 `Settings`
+4. 找到 `Bindings`
+5. 点 `Add`
+6. 类型选择 `Durable Object namespace`
+7. 填：
+
+```text
+Variable name: BUNBUN_ORDER_DO
+Durable Object namespace/class: BunbunOrderDurableObject
+Service/Worker: bunbun-order-do
+```
+
+如果界面让你选择环境，Production 和 Preview 都可以绑定；至少要绑定 Production。
+
+保存后重新部署 Pages。
+
+## 四、保留或删除 KV
+
+现在 `/api/order` 会优先使用 Durable Object：
+
+```text
+BUNBUN_ORDER_DO
+```
+
+如果没有这个绑定，才会退回旧的 KV：
+
+```text
+BUNBUN_ORDERS
+```
+
+所以你可以暂时保留 KV 绑定，不影响 Durable Object 使用。
+
+## 五、测试
+
+打开：
+
+```text
+https://benbentaix2-0.pages.dev/api/order
+```
+
+如果返回里看到：
+
+```json
+"mode":"durable-object"
+```
+
+就说明已经切到 Durable Object。
+
+如果还是：
+
+```json
+"mode":"cloudflare-kv"
+```
+
+说明 Pages 项目还没有绑定 `BUNBUN_ORDER_DO`，或者绑定后没有重新部署。
+
+## 六、登录账号
+
+用户端：
+
+```text
+账号：hjy
+密码：440200
+```
+
+车主端：
+
+```text
+账号：benben
+密码：463926
+```
+
+## 七、注意
+
+这仍然不是原生 App 推送通知。车主端需要打开页面并登录，它会每 3 秒轮询一次 `/api/order`。Durable Object 解决的是跨设备读写一致性，不是后台推送通知。
