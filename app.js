@@ -1,8 +1,8 @@
 const APP_CONFIG = {
   driverName: "笨笨",
   passengerName: "黄佳怡小朋友",
-  phoneNumber: "",
-  passengerPhone: "13268782431",
+  phoneNumber: "13268782431",
+  passengerPhone: "",
   carModel: "黄佳怡的专属小车",
   plateNumber: "粤A EK3226",
   pickup: "你的心里",

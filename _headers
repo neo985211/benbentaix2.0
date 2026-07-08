@@ -1,0 +1,17 @@
+/index.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/app.js
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/styles.css
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/manifest.webmanifest
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/sw.js
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/api/*
+  Cache-Control: no-store

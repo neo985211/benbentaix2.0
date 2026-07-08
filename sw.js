@@ -1,4 +1,4 @@
-const CACHE_NAME = "bunbun-taxi-v4";
+const CACHE_NAME = "bunbun-taxi-v5";
 const ASSETS = [
   "./",
   "index.html",
