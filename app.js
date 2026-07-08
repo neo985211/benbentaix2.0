@@ -1,13 +1,13 @@
 const APP_CONFIG = {
   driverName: "笨笨",
   passengerName: "黄佳怡小朋友",
-  phoneNumber: "13268782431",
+  phoneNumber: "13800000000",
   passengerPhone: "",
   carModel: "黄佳怡的专属小车",
   plateNumber: "粤A EK3226",
   pickup: "你的心里",
-  destination: "位置：你的心里",
-  etaMinutes: 520,
+  destination: "你的心里",
+  etaMinutes: 3,
   autoOpenDialerAfterAccepted: false,
 };
 
@@ -18,6 +18,7 @@ const CREDENTIALS = {
 
 const SESSION_ROLE_KEY = "bunbun.role";
 const LOCAL_ORDER_KEY = "bunbun.latestOrder";
+const DRIVER_ALERTED_ORDER_KEY = "bunbun.driverAlertedOrder";
 const API_URL = "api/order";
 
 let driverPollTimer = null;
@@ -53,6 +54,12 @@ const driverOrderStatus = document.querySelector("#driverOrderStatus");
 const driverCallButton = document.querySelector("#driverCallButton");
 const markDepartedButton = document.querySelector("#markDepartedButton");
 const clearOrderButton = document.querySelector("#clearOrderButton");
+const orderAlertModal = document.querySelector("#orderAlertModal");
+const orderAlertPassenger = document.querySelector("#orderAlertPassenger");
+const orderAlertDestination = document.querySelector("#orderAlertDestination");
+const orderAlertPickup = document.querySelector("#orderAlertPickup");
+const acceptOrderAlertButton = document.querySelector("#acceptOrderAlertButton");
+const dismissOrderAlertButton = document.querySelector("#dismissOrderAlertButton");
 
 const normalizePhoneNumber = (phoneNumber) => phoneNumber.replace(/[^\d+]/g, "");
 
@@ -97,6 +104,45 @@ const formatOrderTime = (isoTime) => {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
+};
+
+const getOrderAlertKey = (order) => {
+  if (!order) {
+    return "";
+  }
+
+  return `${order.id || "no-id"}:${order.createdAt || "no-time"}`;
+};
+
+const hideOrderAlert = () => {
+  orderAlertModal.classList.add("is-hidden");
+  document.body.classList.remove("modal-open");
+};
+
+const showOrderAlert = (order) => {
+  orderAlertPassenger.textContent = order.passengerName || APP_CONFIG.passengerName;
+  orderAlertDestination.textContent = order.destination || APP_CONFIG.destination;
+  orderAlertPickup.textContent = order.pickup || APP_CONFIG.pickup;
+  orderAlertModal.classList.remove("is-hidden");
+  document.body.classList.add("modal-open");
+
+  if ("vibrate" in navigator) {
+    navigator.vibrate([180, 80, 180]);
+  }
+};
+
+const maybeAlertDriver = (order) => {
+  if (!order || order.status === "departed" || sessionStorage.getItem(SESSION_ROLE_KEY) !== "driver") {
+    return;
+  }
+
+  const orderKey = getOrderAlertKey(order);
+  if (!orderKey || sessionStorage.getItem(DRIVER_ALERTED_ORDER_KEY) === orderKey) {
+    return;
+  }
+
+  sessionStorage.setItem(DRIVER_ALERTED_ORDER_KEY, orderKey);
+  showOrderAlert(order);
 };
 
 const apiRequest = async (method, payload) => {
@@ -246,6 +292,8 @@ const renderDriverOrder = (order) => {
   if (passengerPhone) {
     driverCallButton.href = `tel:${passengerPhone}`;
   }
+
+  maybeAlertDriver(order);
 };
 
 const refreshDriverOrder = async () => {
@@ -346,6 +394,13 @@ againButton.addEventListener("click", () => {
 
 passengerLogoutButton.addEventListener("click", logout);
 driverLogoutButton.addEventListener("click", logout);
+dismissOrderAlertButton.addEventListener("click", hideOrderAlert);
+
+acceptOrderAlertButton.addEventListener("click", async () => {
+  hideOrderAlert();
+  const order = await updateOrder({ status: "departed" });
+  renderDriverOrder(order);
+});
 
 markDepartedButton.addEventListener("click", async () => {
   const order = await updateOrder({ status: "departed" });
@@ -364,8 +419,41 @@ window.addEventListener("storage", (event) => {
 });
 
 if ("serviceWorker" in navigator) {
+  let refreshing = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshing) {
+      return;
+    }
+
+    refreshing = true;
+    window.location.reload();
+  });
+
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
+    navigator.serviceWorker
+      .register("sw.js")
+      .then((registration) => {
+        registration.update();
+
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: "SKIP_WAITING" });
+        }
+
+        registration.addEventListener("updatefound", () => {
+          const worker = registration.installing;
+          if (!worker) {
+            return;
+          }
+
+          worker.addEventListener("statechange", () => {
+            if (worker.state === "installed" && navigator.serviceWorker.controller) {
+              worker.postMessage({ type: "SKIP_WAITING" });
+            }
+          });
+        });
+      })
+      .catch(() => {});
   });
 }
 

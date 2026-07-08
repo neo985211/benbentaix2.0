@@ -723,3 +723,49 @@ h2 {
     grid-template-columns: 1fr;
   }
 }
+.order-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(29, 36, 48, 0.34);
+  backdrop-filter: blur(10px);
+}
+
+.order-modal-card {
+  width: min(100%, 390px);
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 24px;
+  background: rgba(255, 253, 248, 0.98);
+  box-shadow: 0 24px 70px rgba(29, 36, 48, 0.28);
+}
+
+.order-modal-card h2 {
+  margin-bottom: 12px;
+  font-size: 1.85rem;
+}
+
+.order-alert-route {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  margin: 14px 0 16px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: #f7fbff;
+}
+
+.order-alert-route p {
+  margin-bottom: 0;
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.order-modal-card .secondary-action {
+  margin-top: 10px;
+}
